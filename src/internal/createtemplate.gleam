@@ -1,28 +1,13 @@
-import gleam/dict.{type Dict}
 import gleam/list
 import gleam/result
 import gleam/string
 import internal/template.{type Token, Loop, Template, Text, Variable}
 
-pub type BlockToken {
-  StartBlock(name: String, contents: String)
-  EndBlock
-}
-
 pub fn create_template(str: String, name: String) {
-  let block_tokens = get_block_tokens(str)
-
-  let blocks =
-    block_tokens
-    |> get_blocks(dict.new())
-  use blocks <- result.try(blocks)
-
-  let block =
-    blocks
-    |> dict.get(name)
+  let block = get_block(str, name)
   let block = case block {
     Ok(block) -> Ok(block)
-    Error(_) -> Error("Block doesnt exist")
+    Error(_) -> Error("Block " <> name <> " doesnt exist")
   }
   use block <- result.try(block)
 
@@ -37,36 +22,12 @@ pub fn create_template(str: String, name: String) {
   |> Ok
 }
 
-pub fn get_block_tokens(str: String) -> List(BlockToken) {
-  str
-  |> string.split(on: "{{{ block ")
-  |> list.filter_map(fn(section) {
-    case section {
-      "end }}}" -> Ok(EndBlock)
-
-      contents -> {
-        use #(name, contents) <- result.try(
-          contents
-          |> string.split_once(" }}}"),
-        )
-        Ok(StartBlock(name, contents))
-      }
-    }
-  })
-}
-
-pub fn get_blocks(
-  tokens: List(BlockToken),
-  acc: Dict(String, String),
-) -> Result(Dict(String, String), String) {
-  case tokens {
-    [] -> acc |> Ok
-
-    [StartBlock(name, contents), EndBlock, ..tokens] ->
-      acc |> dict.insert(name, contents) |> get_blocks(tokens, _)
-
-    _ -> Error("Yikes")
-  }
+pub fn get_block(str: String, name: String) {
+  use #(_, str) <- result.try(
+    str |> string.split_once("{{{ block " <> name <> " }}}"),
+  )
+  use #(str, _) <- result.try(str |> string.split_once("{{{ end block }}}"))
+  str |> Ok
 }
 
 pub fn tokenize(str: String, acc: List(Token)) {

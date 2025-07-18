@@ -11,14 +11,14 @@ pub fn main() -> Nil {
 
 pub fn create_template_single_test() {
   let assert Ok(template) =
-    "{{{ block testing }}}gabagabagoo{{{ block end }}}"
+    "{{{ block testing }}}gabagabagoo{{{ end block }}}"
     |> create_template("testing")
   let assert Template([Text("gabagabagoo")]) = template
 }
 
 pub fn create_template_multi_test() {
   let str =
-    "{{{ block testing }}}gabagabagoo{{{ block end }}}{{{ block testing2 }}}gabagabagee{{{ block end }}}"
+    "{{{ block testing }}}gabagabagoo{{{ end block }}}{{{ block testing2 }}}gabagabagee{{{ end block }}}"
   let assert Ok(template) =
     str
     |> create_template("testing")
@@ -31,14 +31,14 @@ pub fn create_template_multi_test() {
 
 pub fn create_template_with_variable_test() {
   let assert Ok(template) =
-    "{{{ block testing }}}hello {{ var }}!{{{ block end }}}"
+    "{{{ block testing }}}hello {{ var }}!{{{ end block }}}"
     |> create_template("testing")
   let assert Template([Text("hello "), Variable("var"), Text("!")]) = template
 }
 
 pub fn render_template_with_variable_test() {
   let assert Ok(template) =
-    "{{{ block testing }}}hello {{ var }}!{{{ block end }}}"
+    "{{{ block testing }}}hello {{ var }}!{{{ end block }}}"
     |> create_template("testing")
   let assert Template([Text("hello "), Variable("var"), Text("!")]) = template
   let assert Ok("hello world!") =
@@ -50,7 +50,7 @@ pub fn render_template_with_variable_test() {
 
 pub fn render_template_with_loop_test() {
   let assert Ok(template) =
-    "{{{ block testing }}}{{ loop vars as var }}hello {{ var }}!{{ end loop }}{{{ block end }}}"
+    "{{{ block testing }}}{{ loop vars as var }}hello {{ var }}!{{ end loop }}{{{ end block }}}"
     |> create_template("testing")
   let assert Ok("hello world!hello mom!") =
     rendertemplate.render_template(
