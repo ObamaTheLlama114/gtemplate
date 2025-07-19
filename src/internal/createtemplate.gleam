@@ -1,8 +1,7 @@
-import gleam/io
 import gleam/list
 import gleam/result
 import gleam/string
-import internal/template.{type Token, Loop, Template, Text, Variable}
+import internal/template.{type Token, If, Loop, Template, Text, Variable}
 
 pub fn create_template(str: String, name: String) {
   let block = get_block(str, name)
@@ -68,6 +67,37 @@ pub fn tokenize(str: String, acc: List(Token)) -> Result(List(Token), String) {
           use inner <- result.try(tokenize(inner, []))
           let loop = Loop(iterable, variable_name, inner)
           #(loop, after) |> Ok
+        }
+
+        // if case
+        ["if", condition, "then"] -> {
+          let end_if = case
+            after |> string.split("{{ end if }}") |> list.reverse
+          {
+            [_] -> Error("if " <> condition <> " then" <> " has no end if")
+            [] -> panic
+            [after, ..inner] -> {
+              let inner = inner |> list.reverse |> string.join("{{ end if }}")
+              Ok(#(inner, after))
+            }
+          }
+          use #(inner, after) <- result.try(end_if)
+          let token = case inner |> string.split("{{ else }}") |> list.reverse {
+            [str] -> {
+              use then_tokens <- result.try(str |> tokenize([]))
+              Ok(If(condition, then_tokens, []))
+            }
+            [else_tokens, ..then_tokens] -> {
+              let then_tokens =
+                then_tokens |> list.reverse |> string.join("{{ else }}")
+              use then_tokens <- result.try(tokenize(then_tokens, []))
+              use else_tokens <- result.try(tokenize(else_tokens, []))
+              Ok(If(condition, then_tokens, else_tokens))
+            }
+            _ -> panic
+          }
+          use token <- result.try(token)
+          Ok(#(token, after))
         }
 
         // variable case

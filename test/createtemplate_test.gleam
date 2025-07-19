@@ -1,6 +1,6 @@
 import gleeunit
 import internal/createtemplate.{get_block, tokenize}
-import internal/template.{Loop, Text, Variable}
+import internal/template.{If, Loop, Text, Variable}
 
 pub fn main() -> Nil {
   gleeunit.main()
@@ -43,6 +43,21 @@ pub fn tokenize_variable_in_loop_test() {
   let assert Ok([
     Text("testing"),
     Loop("vars", "var", [Text("aga"), Variable("foo"), Text("aba")]),
+    Text("yaba"),
+  ]) = tokenize(str, [])
+}
+
+pub fn tokenize_if_test() {
+  let str = "testing{{ if foo then }}bar{{ end if }}yaba"
+  let assert Ok([Text("testing"), If("foo", [Text("bar")], []), Text("yaba")]) =
+    tokenize(str, [])
+}
+
+pub fn tokenize_if_else_test() {
+  let str = "testing{{ if foo then }}bar{{ else }}baz{{ end if }}yaba"
+  let assert Ok([
+    Text("testing"),
+    If("foo", [Text("bar")], [Text("baz")]),
     Text("yaba"),
   ]) = tokenize(str, [])
 }

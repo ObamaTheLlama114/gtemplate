@@ -1,6 +1,6 @@
 import gleam/dict.{type Dict}
 import gleam/result
-import internal/template.{type Token, type Variable, Loop, Text, Variable}
+import internal/template.{type Token, type Variable, If, Loop, Text, Variable}
 
 pub fn render_template(
   template: template.Template,
@@ -25,8 +25,7 @@ pub fn render_tokens(
       use value <- result.try(value)
       case value {
         template.String(value) -> render_tokens(rest, variables, acc <> value)
-        template.List(_) ->
-          Error("Expected value of " <> name <> " to be a string")
+        _ -> Error("Expected value of " <> name <> " to be a string")
       }
     }
     [Text(text), ..rest] -> render_tokens(rest, variables, acc <> text)
@@ -39,11 +38,29 @@ pub fn render_tokens(
       use value <- result.try(value)
       let value = case value {
         template.List(value) -> Ok(value)
-        template.String(_) ->
-          Error("Expected value of " <> iterable <> " to be a list")
+        _ -> Error("Expected value of " <> iterable <> " to be a list")
       }
       use value <- result.try(value)
       let value = render_loop(value, variable_name, variables, inner, "")
+      use value <- result.try(value)
+      render_tokens(rest, variables, acc <> value)
+    }
+    [If(condition, then_tokens, else_tokens), ..rest] -> {
+      let value = variables |> dict.get(condition)
+      let value = case value {
+        Ok(value) -> value |> Ok
+        Error(_) -> Error(condition <> " not in variables")
+      }
+      use value <- result.try(value)
+      let value = case value {
+        template.Bool(value) -> Ok(value)
+        _ -> Error("Expected value of " <> condition <> " to be a bool")
+      }
+      use value <- result.try(value)
+      let value = case value {
+        True -> render_tokens(then_tokens, variables, "")
+        False -> render_tokens(else_tokens, variables, "")
+      }
       use value <- result.try(value)
       render_tokens(rest, variables, acc <> value)
     }

@@ -3,7 +3,7 @@ import gleeunit
 import internal/rendertemplate
 
 import internal/createtemplate.{create_template}
-import internal/template.{Template, Text, Variable}
+import internal/template.{If, Template, Text, Variable}
 
 pub fn main() -> Nil {
   gleeunit.main()
@@ -80,6 +80,49 @@ pub fn render_template_with_loop_in_loop_test() {
           "vars2",
           template.List([template.String("world"), template.String("mom")]),
         ),
+      ]),
+    )
+}
+
+pub fn render_template_with_if_test() {
+  let assert Ok(template) =
+    "{{{ block testing }}}{{ if var then }}{{ var2 }}{{ end if }}{{{ end block }}}"
+    |> create_template("testing")
+  let assert Template([
+    Text(""),
+    If("var", [Text(""), Variable("var2"), Text("")], []),
+    Text(""),
+  ]) = template
+  let assert Ok("foo") =
+    rendertemplate.render_template(
+      template,
+      dict.from_list([
+        #("var", template.Bool(True)),
+        #("var2", template.String("foo")),
+      ]),
+    )
+}
+
+pub fn render_template_with_if_else_test() {
+  let assert Ok(template) =
+    "{{{ block testing }}}{{ if var then }}{{ var2 }}{{ else }}{{ var3 }}{{ end if }}{{{ end block }}}"
+    |> create_template("testing")
+  let assert Template([
+    Text(""),
+    If(
+      "var",
+      [Text(""), Variable("var2"), Text("")],
+      [Text(""), Variable("var3"), Text("")],
+    ),
+    Text(""),
+  ]) = template
+  let assert Ok("bar") =
+    rendertemplate.render_template(
+      template,
+      dict.from_list([
+        #("var", template.Bool(False)),
+        #("var2", template.String("foo")),
+        #("var3", template.String("bar")),
       ]),
     )
 }
