@@ -5,7 +5,7 @@ import internal/template.{type Token, type Variable, Loop, Text, Variable}
 pub fn render_template(
   template: template.Template,
   variables: Dict(String, Variable),
-) -> Result(String, Nil) {
+) -> Result(String, String) {
   let template.Template(tokens) = template
   render_tokens(tokens, variables, "")
 }
@@ -14,21 +14,33 @@ pub fn render_tokens(
   tokens: List(Token),
   variables: Dict(String, Variable),
   acc: String,
-) -> Result(String, Nil) {
+) -> Result(String, String) {
   case tokens {
     [Variable(name), ..rest] -> {
-      use value <- result.try(variables |> dict.get(name))
+      let value = variables |> dict.get(name)
+      let value = case value {
+        Ok(value) -> value |> Ok
+        Error(_) -> Error(name <> " not in variables")
+      }
+      use value <- result.try(value)
       case value {
         template.String(value) -> render_tokens(rest, variables, acc <> value)
-        template.List(_) -> Error(Nil)
+        template.List(_) ->
+          Error("Expected value of " <> name <> " to be a string")
       }
     }
     [Text(text), ..rest] -> render_tokens(rest, variables, acc <> text)
     [Loop(iterable, variable_name, inner), ..rest] -> {
-      use value <- result.try(variables |> dict.get(iterable))
+      let value = variables |> dict.get(iterable)
+      let value = case value {
+        Ok(value) -> value |> Ok
+        Error(_) -> Error(iterable <> " not in variables")
+      }
+      use value <- result.try(value)
       let value = case value {
         template.List(value) -> Ok(value)
-        template.String(_) -> Error(Nil)
+        template.String(_) ->
+          Error("Expected value of " <> iterable <> " to be a list")
       }
       use value <- result.try(value)
       let value = render_loop(value, variable_name, variables, inner, "")
@@ -45,7 +57,7 @@ pub fn render_loop(
   variables: Dict(String, Variable),
   tokens: List(Token),
   acc: String,
-) -> Result(String, Nil) {
+) -> Result(String, String) {
   case iterable {
     [] -> acc |> Ok
     [value, ..rest] -> {
