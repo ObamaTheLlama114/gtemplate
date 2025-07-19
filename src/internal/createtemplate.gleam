@@ -1,3 +1,4 @@
+import gleam/io
 import gleam/list
 import gleam/result
 import gleam/string
@@ -32,7 +33,7 @@ pub fn get_block(str: String, name: String) {
 }
 
 pub fn tokenize(str: String, acc: List(Token)) -> Result(List(Token), String) {
-  let result = case str |> string.split_once("{{ ") {
+  case str |> string.split_once("{{ ") {
     Ok(#(before, after)) -> {
       let result = after |> string.split_once(" }}")
       let result = case result {
@@ -46,10 +47,10 @@ pub fn tokenize(str: String, acc: List(Token)) -> Result(List(Token), String) {
       let token = case token {
         // loop case
         ["loop", iterable, "as", variable_name] -> {
-          let end_loop = after |> string.split_once("{{ end loop }}")
-          let end_loop = case end_loop {
-            Ok(x) -> x |> Ok
-            Error(_) ->
+          let end_loop = case
+            after |> string.split("{{ end loop }}") |> list.reverse
+          {
+            [_] ->
               Error(
                 "loop "
                 <> iterable
@@ -57,6 +58,11 @@ pub fn tokenize(str: String, acc: List(Token)) -> Result(List(Token), String) {
                 <> variable_name
                 <> " has no end loop",
               )
+            [] -> panic
+            [after, ..inner] -> {
+              let inner = inner |> list.reverse |> string.join("{{ end loop }}")
+              Ok(#(inner, after))
+            }
           }
           use #(inner, after) <- result.try(end_loop)
           use inner <- result.try(tokenize(inner, []))
@@ -78,9 +84,5 @@ pub fn tokenize(str: String, acc: List(Token)) -> Result(List(Token), String) {
     Error(_) -> {
       list.append(acc, [Text(str)]) |> Ok
     }
-  }
-  case result {
-    Ok(x) -> x |> Ok
-    Error(_) -> Error("")
   }
 }

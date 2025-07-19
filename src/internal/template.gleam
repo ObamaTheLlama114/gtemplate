@@ -10,5 +10,5 @@ pub type Template {
 
 pub type Variable {
   String(String)
-  List(List(String))
+  List(List(Variable))
 }

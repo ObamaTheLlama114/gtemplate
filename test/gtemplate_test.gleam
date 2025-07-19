@@ -55,6 +55,31 @@ pub fn render_template_with_loop_test() {
   let assert Ok("hello world!hello mom!") =
     rendertemplate.render_template(
       template,
-      dict.from_list([#("vars", template.List(["world", "mom"]))]),
+      dict.from_list([
+        #(
+          "vars",
+          template.List([template.String("world"), template.String("mom")]),
+        ),
+      ]),
+    )
+}
+
+pub fn render_template_with_loop_in_loop_test() {
+  let assert Ok(template) =
+    "{{{ block testing }}}{{ loop vars as var }}{{ loop vars2 as var2 }}{{ var }} {{ var2 }}!{{ end loop }}{{ end loop }}{{{ end block }}}"
+    |> create_template("testing")
+  let assert Ok("hello world!hello mom!goodbye world!goodbye mom!") =
+    rendertemplate.render_template(
+      template,
+      dict.from_list([
+        #(
+          "vars",
+          template.List([template.String("hello"), template.String("goodbye")]),
+        ),
+        #(
+          "vars2",
+          template.List([template.String("world"), template.String("mom")]),
+        ),
+      ]),
     )
 }

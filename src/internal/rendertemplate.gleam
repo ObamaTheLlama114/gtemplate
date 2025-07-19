@@ -52,7 +52,7 @@ pub fn render_tokens(
 }
 
 pub fn render_loop(
-  iterable: List(String),
+  iterable: List(Variable),
   variable_name: String,
   variables: Dict(String, Variable),
   tokens: List(Token),
@@ -61,8 +61,7 @@ pub fn render_loop(
   case iterable {
     [] -> acc |> Ok
     [value, ..rest] -> {
-      let new_variables =
-        variables |> dict.insert(variable_name, template.String(value))
+      let new_variables = variables |> dict.insert(variable_name, value)
       let rendered = render_tokens(tokens, new_variables, "")
       use rendered <- result.try(rendered)
       render_loop(rest, variable_name, variables, tokens, acc <> rendered)
