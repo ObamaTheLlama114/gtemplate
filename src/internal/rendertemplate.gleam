@@ -1,14 +1,7 @@
 import gleam/dict.{type Dict}
 import gleam/result
-import internal/template.{type Token, type Variable, If, Loop, Text, Variable}
-
-pub fn render_template(
-  template: template.Template,
-  variables: Dict(String, Variable),
-) -> Result(String, String) {
-  let template.Template(tokens) = template
-  render_tokens(tokens, variables, "")
-}
+import internal/createtemplate.{type Token, If, Loop, Text, Variable}
+import template.{type Variable}
 
 pub fn render_tokens(
   tokens: List(Token),

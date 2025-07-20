@@ -1,26 +1,12 @@
 import gleam/list
 import gleam/result
 import gleam/string
-import internal/template.{type Token, If, Loop, Template, Text, Variable}
 
-pub fn create_template(str: String, name: String) {
-  let block = get_block(str, name)
-  let block = case block {
-    Ok(block) -> Ok(block)
-    Error(_) -> Error("Block " <> name <> " does not exist")
-  }
-  use block <- result.try(block)
-
-  let tokens = block |> tokenize([])
-  let tokens = case tokens {
-    Ok(tokens) -> Ok(tokens)
-    Error(err) ->
-      Error("Block " <> name <> " has invalid instructions: " <> err)
-  }
-  use tokens <- result.try(tokens)
-
-  Template(tokens)
-  |> Ok
+pub type Token {
+  Text(String)
+  Variable(name: String)
+  Loop(iterable: String, variable_name: String, tokens: List(Token))
+  If(condition: String, then_tokens: List(Token), else_tokens: List(Token))
 }
 
 pub fn get_block(str: String, name: String) {

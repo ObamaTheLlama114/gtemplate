@@ -1,6 +1,5 @@
 import gleeunit
-import internal/createtemplate.{get_block, tokenize}
-import internal/template.{If, Loop, Text, Variable}
+import internal/createtemplate.{If, Loop, Text, Variable, get_block, tokenize}
 
 pub fn main() -> Nil {
   gleeunit.main()
