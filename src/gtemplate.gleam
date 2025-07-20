@@ -50,7 +50,7 @@ pub fn create_template(str: String) {
   |> Ok
 }
 
-pub fn get_block(str: String, name: String) {
+fn get_block(str: String, name: String) {
   use #(_, str) <- result.try(
     str |> string.split_once("{{{ block " <> name <> " }}}"),
   )
@@ -58,7 +58,7 @@ pub fn get_block(str: String, name: String) {
   str |> Ok
 }
 
-pub fn tokenize(str: String, acc: List(Token)) -> Result(List(Token), String) {
+fn tokenize(str: String, acc: List(Token)) -> Result(List(Token), String) {
   case str |> string.split_once("{{ ") {
     Ok(#(before, after)) -> {
       let result = after |> string.split_once(" }}")
