@@ -4,7 +4,7 @@ import gleam/result
 import gleam/string
 import simplifile
 
-pub opaque type Token {
+type Token {
   Text(String)
   Variable(name: String)
   Loop(iterable: String, variable_name: String, tokens: List(Token))
