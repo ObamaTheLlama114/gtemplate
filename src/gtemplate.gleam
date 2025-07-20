@@ -134,8 +134,10 @@ fn tokenize(str: String, acc: List(Token)) -> Result(List(Token), String) {
       }
 
       use #(token, after) <- result.try(token)
-      let before = Text(before)
-      let acc = list.append(acc, [before, token])
+      let acc = case before {
+        "" -> list.append(acc, [token])
+        _ -> list.append(acc, [Text(before), token])
+      }
       tokenize(after, acc)
     }
     Error(_) -> {
