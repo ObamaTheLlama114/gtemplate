@@ -1,17 +1,28 @@
 import gleam/dict
 import gleeunit
 
-import gtemplate.{create_template, render_template}
+import gtemplate.{create_template, create_template_from_block, render_template}
 import template
 
 pub fn main() -> Nil {
   gleeunit.main()
 }
 
+pub fn render_template_without_block_with_variable_test() {
+  let assert Ok(template) =
+    "hello {{ var }}!"
+    |> create_template
+  let assert Ok("hello world!") =
+    render_template(
+      template,
+      dict.from_list([#("var", template.String("world"))]),
+    )
+}
+
 pub fn render_template_with_variable_test() {
   let assert Ok(template) =
     "{{{ block testing }}}hello {{ var }}!{{{ end block }}}"
-    |> create_template("testing")
+    |> create_template_from_block("testing")
   let assert Ok("hello world!") =
     render_template(
       template,
@@ -22,7 +33,7 @@ pub fn render_template_with_variable_test() {
 pub fn render_template_with_loop_test() {
   let assert Ok(template) =
     "{{{ block testing }}}{{ loop vars as var }}hello {{ var }}!{{ end loop }}{{{ end block }}}"
-    |> create_template("testing")
+    |> create_template_from_block("testing")
   let assert Ok("hello world!hello mom!") =
     render_template(
       template,
@@ -38,7 +49,7 @@ pub fn render_template_with_loop_test() {
 pub fn render_template_with_loop_in_loop_test() {
   let assert Ok(template) =
     "{{{ block testing }}}{{ loop vars as var }}{{ loop vars2 as var2 }}{{ var }} {{ var2 }}!{{ end loop }}{{ end loop }}{{{ end block }}}"
-    |> create_template("testing")
+    |> create_template_from_block("testing")
   let assert Ok("hello world!hello mom!goodbye world!goodbye mom!") =
     render_template(
       template,
@@ -58,7 +69,7 @@ pub fn render_template_with_loop_in_loop_test() {
 pub fn render_template_with_if_test() {
   let assert Ok(template) =
     "{{{ block testing }}}{{ if var then }}{{ var2 }}{{ end if }}{{{ end block }}}"
-    |> create_template("testing")
+    |> create_template_from_block("testing")
   let assert Ok("foo") =
     render_template(
       template,
@@ -72,7 +83,7 @@ pub fn render_template_with_if_test() {
 pub fn render_template_with_if_else_test() {
   let assert Ok(template) =
     "{{{ block testing }}}{{ if var then }}{{ var2 }}{{ else }}{{ var3 }}{{ end if }}{{{ end block }}}"
-    |> create_template("testing")
+    |> create_template_from_block("testing")
   let assert Ok("bar") =
     render_template(
       template,
